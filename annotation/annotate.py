@@ -1,59 +1,6 @@
 import subprocess
-from pathlib import Path
 import os
 import shutil
-import gzip
-
-def remove_vcf_fields(
-    vcf_in: Path, fields_to_remove: str, vcf_out: Path = None
-) -> Path:
-    """
-    Remove unwanted INFO/FORMAT fields from a VCF using bcftools annotate.
-
-    Parameters:
-        vcf_in (Path): Input VCF file (.vcf.gz)
-        fields_to_remove (str): Comma-separated list of fields to remove (e.g. "INFO/OLD_VARIANT,FORMAT/DP4")
-        vcf_out (Path, optional): Output path. If None, auto-generates based on input name.
-
-    Returns:
-        Path: Path to the tidied VCF (.vcf.gz)
-    """
-    if vcf_out is None:
-        base = vcf_in.name.replace(".vcf.gz", "").replace(".vcf", "")
-        vcf_out = vcf_in.parent / f"{base}_tidy.vcf.gz"
-
-    subprocess.run(
-        [
-            "bcftools",
-            "annotate",
-            "--remove",
-            fields_to_remove,
-            "-Oz",
-            "-o",
-            str(vcf_out),
-            str(vcf_in),
-        ],
-        check=True,
-    )
-
-    return vcf_out
-
-
-
-
-def decompress_if_needed(src_path, dest_path):
-    """
-    Decompress a .gz file if needed, else copy as-is.
-    Ensures the final file is plain text, as required by SnpEff.
-    """
-    src_path = Path(src_path)
-    dest_path = Path(dest_path)
-
-    if src_path.suffix == ".gz":
-        with gzip.open(src_path, "rt") as fin, open(dest_path, "wt") as fout:
-            shutil.copyfileobj(fin, fout)
-    else:
-        shutil.copy(src_path, dest_path)
 
 
 def build_snpeff_db(
